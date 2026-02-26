@@ -3,22 +3,22 @@
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils"></script><style>
 body { margin:0; background:#000; overflow:hidden; font-family:monospace; color:#0f0; }
 video, canvas { position:absolute; width:100vw; height:100vh; object-fit:cover; }
-video { filter: brightness(0.1) contrast(2) grayscale(1); }
+video { filter: brightness(0.15) contrast(1.8) grayscale(1); }
 .hud { position:absolute; z-index:10; width:100%; height:100%; display:flex; align-items:center; justify-content:center; perspective:1000px; transition:0.8s; }
-.glass { background:rgba(0,255,0,0.02); border:1px solid rgba(0,255,0,0.4); padding:30px; border-radius:20px; backdrop-filter:blur(8px); text-align:center; transition:0.1s; }
-.hide { opacity:0; transform:scale(0.8) translateZ(-500px); pointer-events:none; }
-button { background:#0f0; color:#000; border:none; padding:12px 25px; font-weight:bold; cursor:pointer; border-radius:5px; }
+.glass { background:rgba(0,255,0,0.03); border:1px solid rgba(0,255,0,0.5); padding:35px; border-radius:30px; backdrop-filter:blur(12px); text-align:center; box-shadow:0 0 30px rgba(0,255,0,0.2); }
+.hide { opacity:0; transform:scale(0.7) translateZ(-600px); pointer-events:none; }
+button { background:#0f0; color:#000; border:none; padding:15px 40px; font-weight:900; cursor:pointer; border-radius:8px; letter-spacing:2px; }
 </style></head><body><video id="v"></video><canvas id="c"></canvas>
-<div class="hud" id="h"><div class="glass" id="g"><h2>SISTEMA HOLÍSTICO</h2><p>MAPEAR VETORES COMPLEXOS</p><button onclick="start()">INICIAR</button></div></div>
-<script>const v=document.getElementById('v'), c=document.getElementById('c'), ctx=c.getContext('2d'), g=document.getElementById('g'), h=document.getElementById('h');
+<div class="hud" id="h"><div class="glass" id="g"><h2>WAR-MODE V4</h2><p>ESTABILIZANDO VETORES...</p><button onclick="start()">ENGAGE</button></div></div>
+<script>const v=document.getElementById('v'), c=document.getElementById('c'), ctx=c.getContext('2d'), h=document.getElementById('h');
 const hol = new Holistic({locateFile: (f) => `https://cdn.jsdelivr.net/npm/@mediapipe/holistic/${f}`});
-hol.setOptions({modelComplexity: 1, smoothLandmarks: true, minDetectionConfidence: 0.5});
+hol.setOptions({modelComplexity: 1, smoothLandmarks: true, minDetectionConfidence: 0.7, minTrackingConfidence: 0.7});
 hol.onResults((r) => { ctx.clearRect(0,0,c.width,c.height);
-drawConnectors(ctx, r.poseLandmarks, POSE_CONNECTIONS, {color:'#0f0', lineWidth:2});
-drawConnectors(ctx, r.faceLandmarks, FACEMESH_TESSELATION, {color:'#0f0', lineWidth:0.5});
-drawConnectors(ctx, r.leftHandLandmarks, HAND_CONNECTIONS, {color:'#fff', lineWidth:1});
-drawConnectors(ctx, r.rightHandLandmarks, HAND_CONNECTIONS, {color:'#fff', lineWidth:1}); });
-async function start() { h.classList.add('hide'); navigator.vibrate(100);
+if(r.poseLandmarks) drawConnectors(ctx, r.poseLandmarks, POSE_CONNECTIONS, {color:'#0f0', lineWidth:4});
+if(r.faceLandmarks) drawConnectors(ctx, r.faceLandmarks, FACEMESH_CONTOURS, {color:'#0f0', lineWidth:1});
+if(r.leftHandLandmarks) drawConnectors(ctx, r.leftHandLandmarks, HAND_CONNECTIONS, {color:'#fff', lineWidth:3});
+if(r.rightHandLandmarks) drawConnectors(ctx, r.rightHandLandmarks, HAND_CONNECTIONS, {color:'#fff', lineWidth:3}); });
+async function start() { h.classList.add('hide'); navigator.vibrate([50,30,50]);
 const cam = new Camera(v, {onFrame: async () => { c.width=v.videoWidth; c.height=v.videoHeight; await hol.send({image:v}); }}); cam.start(); }
-window.addEventListener('deviceorientation', (e) => { g.style.transform = `rotateX(${-e.beta/15}deg) rotateY(${e.gamma/15}deg)`; });
+window.addEventListener('deviceorientation', (e) => { document.getElementById('g').style.transform = `rotateX(${-e.beta/15}deg) rotateY(${e.gamma/15}deg)`; });
 </script></body></html>
