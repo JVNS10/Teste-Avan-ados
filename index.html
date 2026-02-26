@@ -1,16 +1,23 @@
-<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!DOCTYPE html><html lang="pt-br"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose"></script><script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils"></script>
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils"></script><style>
-body { margin: 0; background: #000; overflow: hidden; display: flex; justify-content: center; }
-canvas { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; object-fit: cover; z-index: 2; }
-video { position: absolute; width: 100vw; height: 100vh; object-fit: cover; filter: brightness(0.3) contrast(1.2); }
-.ui { position: absolute; bottom: 20px; color: #0f0; z-index: 3; font-family: monospace; text-shadow: 0 0 5px #0f0; }
-</style></head><body><video id="v"></video><canvas id="c"></canvas><div class="ui">SISTEMA DE RASTREAMENTO ATIVO</div>
-<script>const v=document.getElementById('v'), c=document.getElementById('c'), ctx=c.getContext('2d');
-const pose = new Pose({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`});
-pose.setOptions({modelComplexity: 1, smoothLandmarks: true, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5});
+body { margin:0; background:#000; overflow:hidden; font-family:monospace; color:#0f0; }
+video, canvas { position:absolute; width:100vw; height:100vh; object-fit:cover; }
+video { filter: brightness(0.2) contrast(1.5) grayscale(1); }
+.hud { position:absolute; z-index:10; width:100%; height:100%; display:flex; align-items:center; justify-content:center; perspective:1000px; pointer-events:none; }
+.glass { background:rgba(0,255,0,0.05); border:1px solid rgba(0,255,0,0.3); padding:30px; border-radius:20px; backdrop-filter:blur(10px); text-align:center; transition:0.1s; pointer-events:auto; }
+.scan-line { position:absolute; width:100%; height:2px; background:#0f0; box-shadow:0 0 15px #0f0; animation:s 3s infinite; z-index:5; }
+button { background:#0f0; color:#000; border:none; padding:10px 20px; font-weight:bold; cursor:pointer; margin-top:10px; }
+@keyframes s { 0%,100%{top:0} 50%{top:100%} } </style></head><body>
+<video id="v"></video><canvas id="c"></canvas><div class="scan-line"></div>
+<div class="hud"><div class="glass" id="g"><h2>SISTEMA HUD</h2><p id="st">BIOMETRIA PENDENTE</p><button onclick="start()">AUTENTICAR</button></div></div>
+<script>const v=document.getElementById('v'), c=document.getElementById('c'), ctx=c.getContext('2d'), g=document.getElementById('g');
+const pose = new Pose({locateFile: (f) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${f}`});
+pose.setOptions({modelComplexity: 1, smoothLandmarks: true, minDetectionConfidence: 0.5});
 pose.onResults((r) => { ctx.clearRect(0,0,c.width,c.height); if(!r.poseLandmarks) return;
-drawConnectors(ctx, r.poseLandmarks, POSE_CONNECTIONS, {color: '#0f0', lineWidth: 2});
-drawLandmarks(ctx, r.poseLandmarks, {color: '#fff', lineWidth: 1, radius: 2}); });
-const cam = new Camera(v, {onFrame: async () => { c.width=v.videoWidth; c.height=v.videoHeight; await pose.send({image: v}); }});
-cam.start();</script></body></html>
+drawConnectors(ctx, r.poseLandmarks, POSE_CONNECTIONS, {color:'#0f0', lineWidth:2});
+drawLandmarks(ctx, r.poseLandmarks, {color:'#fff', radius:1}); });
+async function start() { navigator.vibrate([50,50,50]); document.getElementById('st').innerText='ALVO RASTREADO'; g.style.borderColor='#fff';
+const cam = new Camera(v, {onFrame: async () => { c.width=v.videoWidth; c.height=v.videoHeight; await pose.send({image:v}); }}); cam.start(); }
+window.addEventListener('deviceorientation', (e) => { g.style.transform = `rotateX(${-e.beta/15}deg) rotateY(${e.gamma/15}deg)`; });
+</script></body></html>
