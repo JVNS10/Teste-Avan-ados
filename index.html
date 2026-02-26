@@ -1,28 +1,24 @@
 <!DOCTYPE html><html lang="pt-br"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/holistic"></script><script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils"></script>
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils"></script><style>
-body { margin:0; background:#000; overflow:hidden; font-family:monospace; color:#0f0; }
-video, canvas { position:absolute; width:100vw; height:100vh; object-fit:cover; transform: scaleX(-1); }
-video { filter: brightness(0.2) contrast(2) saturate(0); }
-.hud { position:absolute; z-index:10; width:100%; height:100%; display:flex; align-items:center; justify-content:center; perspective:1200px; transition:1s cubic-bezier(0.4, 0, 0.2, 1); }
-.glass { background:rgba(0,255,0,0.05); border:2px solid #0f0; padding:40px; border-radius:10px; backdrop-filter:blur(20px); text-align:center; box-shadow:0 0 50px rgba(0,255,0,0.3); }
-.hide { opacity:0; transform: translateY(-100%) scale(1.2); pointer-events:none; }
-.info { position:absolute; top:20px; left:20px; font-size:10px; z-index:11; pointer-events:none; }
-button { background:#0f0; color:#000; border:none; padding:15px 50px; font-weight:900; cursor:pointer; clip-path: polygon(10% 0, 100% 0, 90% 100%, 0% 100%); transition:0.3s; }
-button:active { transform:scale(0.9); background:#fff; }
+body { margin:0; background:#000; overflow:hidden; font-family:monospace; }
+video, canvas { position:absolute; width:100vw; height:100vh; object-fit:cover; transform:scaleX(-1); }
+video { filter: brightness(0.2) contrast(1.5) grayscale(1); opacity: 0.6; }
+.hud { position:absolute; z-index:10; width:100%; height:100%; display:flex; align-items:center; justify-content:center; perspective:1000px; transition:0.5s; }
+.glass { background:rgba(0,255,0,0.05); border:1px solid #0f0; padding:30px; border-radius:15px; backdrop-filter:blur(10px); text-align:center; color:#0f0; }
+.hide { opacity:0; pointer-events:none; transform: scale(1.5); }
+button { background:#0f0; color:#000; border:none; padding:15px 30px; font-weight:900; cursor:pointer; text-transform:uppercase; }
 </style></head><body><video id="v"></video><canvas id="c"></canvas>
-<div class="info" id="fps">CORE: ACTIVE</div><div class="hud" id="h"><div class="glass" id="g">
-<h1 style="letter-spacing:10px">OVERLOAD</h1><p>VETORES DE MALHA COMPLETA ATIVOS</p><button onclick="start()">INICIAR PROTOCOLO</button>
-</div></div><script>const v=document.getElementById('v'), c=document.getElementById('c'), ctx=c.getContext('2d'), h=document.getElementById('h');
+<div class="hud" id="h"><div class="glass" id="g"><h1>SISTEMA V6</h1><p>OTIMIZAÇÃO DE FPS ATIVA</p><button onclick="start()">CONECTAR</button></div></div>
+<script>const v=document.getElementById('v'), c=document.getElementById('c'), ctx=c.getContext('2d'), h=document.getElementById('h');
 const hol = new Holistic({locateFile: (f) => `https://cdn.jsdelivr.net/npm/@mediapipe/holistic/${f}`});
-hol.setOptions({modelComplexity: 2, smoothLandmarks: true, enableSegmentation: false, smoothSegmentation: true, minDetectionConfidence: 0.8, minTrackingConfidence: 0.9});
-hol.onResults((r) => { ctx.save(); ctx.scale(-1, 1); ctx.translate(-c.width, 0); ctx.clearRect(0,0,c.width,c.height);
-if(r.poseLandmarks) drawConnectors(ctx, r.poseLandmarks, POSE_CONNECTIONS, {color:'#0f0', lineWidth:3});
-if(r.faceLandmarks) { drawConnectors(ctx, r.faceLandmarks, FACEMESH_TESSELATION, {color:'#0f0', lineWidth:0.5}); drawConnectors(ctx, r.faceLandmarks, FACEMESH_RIGHT_EYE, {color:'#fff', lineWidth:1}); drawConnectors(ctx, r.faceLandmarks, FACEMESH_LEFT_EYE, {color:'#fff', lineWidth:1}); }
-if(r.leftHandLandmarks) { drawConnectors(ctx, r.leftHandLandmarks, HAND_CONNECTIONS, {color:'#0f0', lineWidth:4}); drawLandmarks(ctx, r.leftHandLandmarks, {color:'#fff', radius:2}); }
-if(r.rightHandLandmarks) { drawConnectors(ctx, r.rightHandLandmarks, HAND_CONNECTIONS, {color:'#0f0', lineWidth:4}); drawLandmarks(ctx, r.rightHandLandmarks, {color:'#fff', radius:2}); }
+hol.setOptions({modelComplexity: 0, smoothLandmarks: true, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5});
+hol.onResults((r) => { ctx.save(); ctx.clearRect(0,0,c.width,c.height); 
+if(r.poseLandmarks) drawConnectors(ctx, r.poseLandmarks, POSE_CONNECTIONS, {color:'#0f0', lineWidth:2});
+if(r.faceLandmarks) drawConnectors(ctx, r.faceLandmarks, FACEMESH_TESSELATION, {color:'#0f0', lineWidth:0.5});
+if(r.leftHandLandmarks) drawConnectors(ctx, r.leftHandLandmarks, HAND_CONNECTIONS, {color:'#fff', lineWidth:3});
+if(r.rightHandLandmarks) drawConnectors(ctx, r.rightHandLandmarks, HAND_CONNECTIONS, {color:'#fff', lineWidth:3});
 ctx.restore(); });
-async function start() { h.classList.add('hide'); navigator.vibrate([100,50,100]);
-const cam = new Camera(v, {onFrame: async () => { c.width=v.videoWidth; c.height=v.videoHeight; await hol.send({image:v}); }, width:1280, height:720}); cam.start(); }
-window.addEventListener('deviceorientation', (e) => { document.getElementById('g').style.transform = `rotateX(${-e.beta/12}deg) rotateY(${e.gamma/12}deg)`; });
+async function start() { h.classList.add('hide'); navigator.vibrate(50);
+const cam = new Camera(v, {onFrame: async () => { c.width=v.videoWidth; c.height=v.videoHeight; await hol.send({image:v}); }, width: 640, height: 480}); cam.start(); }
 </script></body></html>
